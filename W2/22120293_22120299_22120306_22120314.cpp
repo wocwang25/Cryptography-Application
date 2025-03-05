@@ -25,6 +25,35 @@ map<int, char> mapping(const string &title)
     return map_char;
 }
 
+string exchange_table(string str)
+{
+    int numCols = keyword.length();
+    while (str.length() % numCols != 0)
+        str += ' ';
+
+    int numRows = str.length() / numCols;
+
+    vector<vector<char>> table(numRows, vector<char>(numCols));
+    for (int i = 0; i < str.length(); i++)
+    {
+        table[i / numCols][i % numCols] = str[i];
+    }
+
+    vector<int> col_index(numCols);
+    for (int i = 0; i < numCols; i++)
+        col_index[i] = i;
+
+    sort(col_index.begin(), col_index.end(), [&](int a, int b)
+         { return keyword[a] < keyword[b]; });
+
+    string ciphertexts = "";
+    for (int i : col_index)
+        for (int j = 1; j < numRows; j++)
+            ciphertexts += table[j][i];
+
+    return ciphertexts;
+}
+
 string encryptXXXXXX(string plaintexts)
 {
     string ciphertexts_temp = "";
@@ -44,10 +73,9 @@ string encryptXXXXXX(string plaintexts)
         }
     }
 
-    int numCols = keyword.length();
     string Ciphertexts = keyword + ciphertexts_temp;
 
-    return ciphertexts_temp;
+    return exchange_table(Ciphertexts);
 }
 
 int main()

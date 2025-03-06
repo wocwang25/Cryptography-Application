@@ -1,5 +1,5 @@
 #include <iostream>
-#include <map>
+#include <unordered_map>
 #include <algorithm>
 #include <vector>
 using namespace std;
@@ -14,18 +14,31 @@ char table[6][6] = {
     {'x', 's', 'v', 'i', 'r', '2'},
     {'9', 'e', 'y', '0', 'f', 'q'}};
 
-map<int, char> mapping(const string &title)
+unordered_map<int, char> mapping(const string &title, bool reversed = true)
 {
-    map<int, char> map_char;
-    int i = 1;
-    for (char ch : title)
+    unordered_map<int, char> map_char;
+    int i = 0;
+    if (reversed)
     {
-        map_char.insert({i++, ch});
+        for (char ch : title)
+        {
+            map_char.insert({i++, ch});
+        }
+    }
+    else
+    {
+        for (char ch : title)
+        {
+            map_char.insert({ch, i++});
+        }
     }
     return map_char;
 }
 
-string exchange_table(string str)
+unordered_map<int, char> map_char = mapping(title);
+unordered_map<int, char> map_int = mapping(title, false);
+
+vector<vector<char>> create_table(string str, bool encrypt = true)
 {
     int numCols = keyword.length();
     while (str.length() % numCols != 0)
@@ -33,25 +46,26 @@ string exchange_table(string str)
 
     int numRows = str.length() / numCols;
 
-    vector<vector<char>> table(numRows, vector<char>(numCols));
-    for (int i = 0; i < str.length(); i++)
+    vector<vector<char>> table(numRows, vector<char>(numCols, ' '));
+    if (encrypt)
     {
-        table[i / numCols][i % numCols] = str[i];
+        for (int i = 0; i < str.length(); i++)
+        {
+            table[i / numCols][i % numCols] = str[i]; // tạo bảng theo dòng -> encrypt
+        }
+    }
+    else
+    {
+        for (int col = 0; col < numCols; col++)
+        {
+            for (int row = 0; row < numRows; row++)
+            {
+                table[row][col] = str[row + col * numRows]; // tạo bảng theo cột -> decrypt
+            }
+        }
     }
 
-    vector<int> col_index(numCols);
-    for (int i = 0; i < numCols; i++)
-        col_index[i] = i;
-
-    sort(col_index.begin(), col_index.end(), [&](int a, int b)
-         { return keyword[a] < keyword[b]; });
-
-    string ciphertexts = "";
-    for (int i : col_index)
-        for (int j = 1; j < numRows; j++)
-            ciphertexts += table[j][i];
-
-    return ciphertexts;
+    return table;
 }
 
 string encryptXXXXXX(string plaintexts)
@@ -66,32 +80,125 @@ string encryptXXXXXX(string plaintexts)
             {
                 if (ch == table[i][j])
                 {
-                    ciphertexts_temp += mapping(title)[i + 1];
-                    ciphertexts_temp += mapping(title)[j + 1];
+                    ciphertexts_temp += map_char[i];
+                    ciphertexts_temp += map_char[j];
                 }
             }
         }
     }
 
-    string Ciphertexts = keyword + ciphertexts_temp;
+    // string table_data = ciphertexts_temp;
+    vector<vector<char>> table = create_table(ciphertexts_temp);
 
-    return exchange_table(Ciphertexts);
+    int numCols = keyword.length();
+    int numRows = ciphertexts_temp.length() / numCols;
+
+    vector<int> col_order(numCols);
+    for (int i = 0; i < numCols; i++)
+        col_order[i] = i;
+
+    sort(col_order.begin(), col_order.end(), [&](int a, int b)
+         { return keyword[a] < keyword[b]; });
+
+    string ciphertexts = "";
+    for (int i : col_order)
+        for (int j = 0; j < numRows; j++)
+            ciphertexts += table[j][i];
+
+    return ciphertexts;
+}
+
+void print_table(const vector<vector<char>> &table)
+{
+    for (const auto &row : table)
+    {
+        for (char ch : row)
+        {
+            cout << ch << " ";
+        }
+        cout << endl;
+    }
+}
+
+void reorderRows(vector<vector<char>> &table, const vector<int> &col_order)
+{
+    for (auto &row : table)
+    {
+        vector<pair<char, int>> row_with_index;
+
+        for (int col = 0; col < row.size(); col++)
+        {
+            row_with_index.push_back({row[col], col_order[col]});
+        }
+
+        sort(row_with_index.begin(), row_with_index.end(),
+             [](const pair<char, int> &a, const pair<char, int> &b)
+             {
+                 return a.second < b.second;
+             });
+
+        for (int col = 0; col < row.size(); col++)
+        {
+            row[col] = row_with_index[col].first;
+        }
+    }
+}
+
+string decryptXXXXXX(string ciphertexts)
+{
+    int numCols = keyword.length();
+    int numRows = ciphertexts.length() / numCols;
+
+    vector<int> col_order(numCols);
+    for (int i = 0; i < numCols; i++)
+        col_order[i] = i;
+
+    sort(col_order.begin(), col_order.end(), [](int &a, int &b)
+         { return keyword[a] < keyword[b]; });
+
+    vector<vector<char>> table_enc = create_table(ciphertexts, false);
+    // print_table(table_enc);
+
+    reorderRows(table_enc, col_order);
+    // cout << endl;
+    // print_table(table_enc);
+
+    string plaintext_raw = "";
+    for (int row = 0; row < numRows; row++)
+    {
+        for (int col = 0; col < numCols; col++)
+        {
+            plaintext_raw += table_enc[row][col];
+        }
+    }
+
+    // cout << "\nResults: " << plaintext_raw << endl;
+
+    int x = 0, y = 0;
+
+    string decryptedtexts = "";
+
+    for (int i = 0; i < plaintext_raw.length() - 1; i += 2)
+    {
+        char char_1 = plaintext_raw[i];
+        char char_2 = plaintext_raw[i + 1];
+        x = map_int[char_1];
+        y = map_int[char_2];
+        // cout << char_1 << "-" << char_2 << "->" << x << "_" << y << "->";
+
+        decryptedtexts += table[x][y];
+        // cout << decryptedtexts << "\n";
+    }
+
+    return decryptedtexts;
 }
 
 int main()
 {
-    // char table[6][6] = {
-    //     {'8', 'p', '3', 'd', '1', 'n'},
-    //     {'l', 't', '4', 'o', 'a', 'h'},
-    //     {'7', 'k', 'b', 'c', '5', 'z'},
-    //     {'j', 'u', '6', 'w', 'g', 'm'},
-    //     {'x', 's', 'v', 'i', 'r', '2'},
-    //     {'9', 'e', 'y', '0', 'f', 'q'}};
-
     string plaintexts = "attack at 10 pm";
     string ciphertexts = encryptXXXXXX(plaintexts);
     cout << "Results: " << ciphertexts << endl;
 
-    // string decryptedtexts = decryptXXXXXX(ciphertexts);
-    // cout << "Results: " << decryptedtexts << endl;
+    string decryptedtexts = decryptXXXXXX(ciphertexts);
+    cout << "Results: " << decryptedtexts << endl;
 }

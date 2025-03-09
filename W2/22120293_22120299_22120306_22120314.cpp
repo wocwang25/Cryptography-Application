@@ -6,6 +6,7 @@ using namespace std;
 
 string keyword = "MARK", title = "HCMUNS";
 int rows = 6, cols = 6;
+int add_char = 0;
 char table[6][6] = {
     {'8', 'p', '3', 'd', '1', 'n'},
     {'l', 't', '4', 'o', 'a', 'h'},
@@ -38,20 +39,27 @@ unordered_map<int, char> mapping(const string &title, bool reversed = true)
 unordered_map<int, char> map_char = mapping(title);
 unordered_map<int, char> map_int = mapping(title, false);
 
-vector<vector<char>> create_table(string str, bool encrypt = true)
+vector<vector<char>> create_table(string &str, bool encrypt = true)
 {
     int numCols = keyword.length();
     while (str.length() % numCols != 0)
-        str += ' ';
+    {
+        str += 'S';
+    }
 
     int numRows = str.length() / numCols;
 
     vector<vector<char>> table(numRows, vector<char>(numCols, ' '));
     if (encrypt)
     {
-        for (int i = 0; i < str.length(); i++)
+        int char_index = 0;
+        for (int row = 0; row < numRows; row++)
         {
-            table[i / numCols][i % numCols] = str[i]; // tạo bảng theo dòng -> encrypt
+            // table[i / numCols][i % numCols] = str[i]; // tạo bảng theo dòng -> encrypt
+            for (int col = 0; col < numCols; col++)
+            {
+                table[row][col] = str[char_index++];
+            }
         }
     }
     else
@@ -68,6 +76,18 @@ vector<vector<char>> create_table(string str, bool encrypt = true)
     return table;
 }
 
+void print_table(const vector<vector<char>> &table)
+{
+    for (const auto &row : table)
+    {
+        for (char ch : row)
+        {
+            cout << ch << " ";
+        }
+        cout << endl;
+    }
+}
+
 string encryptXXXXXX(string plaintexts)
 {
     string ciphertexts_temp = "";
@@ -82,13 +102,18 @@ string encryptXXXXXX(string plaintexts)
                 {
                     ciphertexts_temp += map_char[i];
                     ciphertexts_temp += map_char[j];
+                    // cout << ch << "-" << map_char[i] << "-" << map_char[j] << "\n";
                 }
             }
         }
     }
 
     // string table_data = ciphertexts_temp;
-    vector<vector<char>> table = create_table(ciphertexts_temp);
+    // cout << ciphertexts_temp.length() << endl;
+    add_char = ciphertexts_temp.length();
+    vector<vector<char>> table_enc = create_table(ciphertexts_temp);
+
+    // print_table(table_enc);
 
     int numCols = keyword.length();
     int numRows = ciphertexts_temp.length() / numCols;
@@ -101,23 +126,18 @@ string encryptXXXXXX(string plaintexts)
          { return keyword[a] < keyword[b]; });
 
     string ciphertexts = "";
-    for (int i : col_order)
-        for (int j = 0; j < numRows; j++)
-            ciphertexts += table[j][i];
+    // cout << "Rows: " << numRows << " - Cols: " << numCols << endl;
+    for (int col : col_order)
+    {
+        for (int row = 0; row < numRows; row++)
+        {
+            ciphertexts += table_enc[row][col];
+            // cout << table_enc[row][col] << "-";
+        }
+    }
+    // cout << endl;
 
     return ciphertexts;
-}
-
-void print_table(const vector<vector<char>> &table)
-{
-    for (const auto &row : table)
-    {
-        for (char ch : row)
-        {
-            cout << ch << " ";
-        }
-        cout << endl;
-    }
 }
 
 void reorderRows(vector<vector<char>> &table, const vector<int> &col_order)
@@ -168,7 +188,10 @@ string decryptXXXXXX(string ciphertexts)
     {
         for (int col = 0; col < numCols; col++)
         {
-            plaintext_raw += table_enc[row][col];
+            if (plaintext_raw.length() < add_char)
+            {
+                plaintext_raw += table_enc[row][col];
+            }
         }
     }
 
@@ -195,9 +218,10 @@ string decryptXXXXXX(string ciphertexts)
 
 int main()
 {
-    string plaintexts = "attack at 10 pm";
+    string plaintexts = "attack at 10 pmm";
     string ciphertexts = encryptXXXXXX(plaintexts);
     cout << "Results: " << ciphertexts << endl;
+    string i = "NCUNNCCNCCUSCCMCHHCCMCSU";
 
     string decryptedtexts = decryptXXXXXX(ciphertexts);
     cout << "Results: " << decryptedtexts << endl;

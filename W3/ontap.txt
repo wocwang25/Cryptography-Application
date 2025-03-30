@@ -1,0 +1,43 @@
+Sử dụng bảng kí tự cố định cho trước để thực hiện mã hóa
+Encrypt -> Chuyển đổi từng kí tự trong message ban đầu từ bản kí tự cho trước thành ciphertexts
+        -> Tạo bảng từ ciphertext vừa gen theo keyword cố định, sắp xếp các cột theo thứ tự sắp xếp của keyword
+        -> Tạo ciphertexts từ bảng, lấy từng kí tự theo cột, ta có được ciphertexts hoàn chỉnh
+
+Decrypt -> Dựa vào keyword
+
+
+W3:
+
+hoán vị PC1 tạo index từ bảng pc1, cụ thể là lấy value cụ thể ở vị trí thứ i'th - cho thương của nó với 8
+        -> kết quả index được sử dụng để truy xuất bit thứ index'th trong bin_key ban đầu, triển khai vòng lặp tạo key binary mới có độ dài 56 bits
+
+hoán vị PC2 tạo index từ bảng pc2, sử dụng value cụ thể trong pc2 như một index
+        -> triển khai vòng lặp truy xuất bit thứ index'th để tạo key binary mới có độ dài 48 bits
+
+Hàm f (Feistel function):
+
+Mở rộng 32-bit → 48-bit (sử dụng bảng E)
+
+XOR với khóa con 48-bit
+
+Thay thế qua 8 S-boxes (6-bit → 4-bit)
+
+Hoán vị 32-bit cuối cùng
+
+Quy trình mã hóa:
+
+Chia thông điệp thành các khối 64-bit
+
+Thực hiện 16 vòng Feistel
+
+Mỗi vòng sử dụng hàm f với khóa con khác nhau
+
+Các hàm phụ trợ:
+
+Expansion(): Mở rộng dữ liệu
+
+SBoxSubstitution(): Thay thế qua S-boxes
+
+Permutation(): Hoán vị bit
+
+XOR(): Thực hiện phép XOR bit
